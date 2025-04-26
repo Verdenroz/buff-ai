@@ -1,8 +1,9 @@
 import json
 import logging
 import os
-from typing import Any, List, Optional, TypeVar, Dict
+from typing import Any, List, Optional, TypeVar
 
+from dotenv import load_dotenv
 from redis import Redis
 
 from models.post import Post
@@ -15,6 +16,7 @@ class RedisHandler:
         """
         Initialize Redis connection using URL from environment or passed parameter
         """
+        load_dotenv()
         redis_url = url or os.environ.get('REDIS_URL')
         if not redis_url:
             raise ValueError("Redis URL not provided and REDIS_URL environment variable not set")
@@ -56,47 +58,23 @@ class RedisHandler:
         """Check if a key exists in Redis"""
         return bool(self.redis.exists(key))
 
-    def save_new_trump_posts(self, posts: List[Post]) -> List[Dict[str, Any]]:
-        """
-        Save new Trump posts to Redis and return only the new ones
-        Each post should have a unique 'id' field
-        Posts will be stored with key format 'trump_post:{id}'
-        """
-        if not posts:
-            return []
+    def save_post(self, post: Post) -> bool:
+        """Save a Post object to Redis"""
+        key = f"trump:{post.date}"
+        return self.set(key, post.model_dump_json(), expiry=30 * 24 * 60 * 60)  # 30 days
 
-        new_posts = []
-
-        # Process posts in reverse order (oldest first) to properly handle cutoff
-        for post in reversed(posts):
-            post_key = post.date
-            if not post_key:
-                self.logger.warning(f"Post missing ID field: {post}")
-                continue
-
-            key = f"trump:{post_key}"
-
-            # If post already exists, stop processing (found previous post)
-            if self.exists(key):
-                break
-
-            # Save the post and add to new posts list
-            self.set(key, post, expiry=30 * 24 * 60 * 60)  # Set expiry to 30 days
-            new_posts.append(post)
-
-        # Return new posts in original order (newest first)
-        return list(reversed(new_posts))
-
-    def get_recent_trump_posts(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_recent_trump_posts(self) -> List[Post]:
         """Get the most recent Trump posts from Redis"""
         pattern = "trump:*"
         keys = self.redis.keys(pattern)
 
         posts = []
-        for key in keys[:limit]:
-            post_data = self.get(key)
-            if post_data:
-                posts.append(post_data)
+        for key in keys:
+            post_data = json.loads(self.get(key))
+            post = Post.model_validate(post_data)
+            if post:
+                posts.append(post)
 
         # Sort posts by timestamp (descending)
-        return sorted(posts, key=lambda x: x.get('date', ''), reverse=True)
+        print(posts)
+        return sorted(posts, key=lambda x: x.date, reverse=True)
