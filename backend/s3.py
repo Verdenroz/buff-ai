@@ -1,5 +1,3 @@
-import os
-
 import boto3
 from botocore.config import Config
 from dotenv import load_dotenv
@@ -8,15 +6,14 @@ from models.post import Post
 
 
 class S3:
-    def __init__(self, bucket: str = "ramhacks"):
+    def __init__(self, bucket: str = "ramhack"):
         load_dotenv()
         self.bucket = bucket
         self.client = boto3.client(
             's3',
-            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
-            region_name="us-east-2",
-            config=Config(signature_version="s3v4")
+            region_name='us-east-2',
+            endpoint_url='https://s3.us-east-2.amazonaws.com',
+            config=Config(signature_version='s3v4')
         )
 
     def upload_file(self, file: bytes, post: Post) -> str:
@@ -74,4 +71,3 @@ class S3:
         except Exception as e:
             print(f"Error generating presigned URL: {e}")
             raise Exception(f"Failed to generate presigned URL: {str(e)}")
-
