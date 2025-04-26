@@ -1,15 +1,11 @@
 import os
+from contextlib import asynccontextmanager
 
-import boto3
 import requests
-from fastapi import FastAPI, Query
 import yfinance as yf
+from fastapi import FastAPI, Query
 
 from models.historical import Period
-from models.post import Post
-
-from elevenlabs import ElevenLabs
-
 from rds import RedisHandler
 from s3 import S3
 
@@ -17,15 +13,30 @@ app = FastAPI()
 
 elevenlabs = os.getenv("ELEVENLABS_API_KEY")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize dependencies
+    rds = RedisHandler()
+    s3 = S3()
+
+    app.state.rds = rds
+    app.state.s3 = s3
+
+    yield
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
 
 """
 1 day - time interval of 1 minute - 5 minutes 
 5 day - time interval of 15 minutes
 1 month - time interval of 1 day
 """
+
 
 @app.get("/stock/{ticker}")
 async def get_stock_data(ticker: str, period: Period):
@@ -47,7 +58,7 @@ async def get_stock_data(ticker: str, period: Period):
     if period not in valid_periods:
         return {"error": "Invalid period"}
 
-    #get the current interval
+    # get the current interval
     interval = intervals.get(period, [])
     period_string = periods.get(period, [])
 
@@ -55,7 +66,8 @@ async def get_stock_data(ticker: str, period: Period):
     data = stock.history(period=period_string, interval=interval)
     return data.to_dict(orient="records")
 
-#Fetch news articles for a given ticker
+
+# Fetch news articles for a given ticker
 @app.get("/news/{ticker}")
 async def get_news(ticker: str):
     """
@@ -65,7 +77,8 @@ async def get_news(ticker: str):
     news = stock.news
     return news
 
-#Get company funamentals
+
+# Get company funamentals
 @app.get("/fundamentals/{ticker}")
 async def get_fundamentals(ticker: str):
     """
@@ -82,7 +95,7 @@ async def get_fundamentals(ticker: str):
     }
     return fundamentals
 
-#logo.dev search and get a logo
+
 @app.get("/logo/{ticker}")
 async def get_logo(ticker: str):
     """
@@ -98,37 +111,12 @@ async def get_logo(ticker: str):
         return {"error": "Failed to fetch logo"}
 
 
-#Get a posts tts and create an audiofile on elevenlabs
-#Then should but put in s3 bucket
 @app.get("/tts")
-async def get_tts(key:str = Query(...)):
-    # """
-    # Get post from redis and get from s3
-    # """
-    # #client = ElevenLabs(api_key=elevenlabs)
-    # # generated_audio = client.text_to_speech.convert(
-    # #     voice_id="JBFqnCBsd6RMkjVDRZzb",
-    # #     output_format="mp3_44100_128",
-    # #     text="Test 123",
-    # #     model_id="eleven_multilingual_v2",
-    # # )
-    #
-    #
-    # #Get from redis here
-    # rds = RedisHandler()
-    #
-    # #Get the post from redis
-    # post = rds.get(f"trump_post:{key}")
-    # if not post:
-    #     return {"error": "Post not found"}
-    #
-    # #s3 key
-    # key = f"tts/trump/{post['date']}.mp3"
-
-    #Get the audio file from s3
+async def get_tts(key: str = Query(...)):
+    # Get the audio file from s3
     s3 = S3()
     audio_file = s3.get_presigned_url(key)
     if not audio_file:
         return {"error": "Audio file not found"}
-    #return presigned url
+    # return presigned url
     return {"audio_file": audio_file}
