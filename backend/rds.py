@@ -3,8 +3,9 @@ import logging
 import os
 from typing import Any, List, Optional, TypeVar, Dict
 
-from models.post import Post
 from redis import Redis
+
+from models.post import Post
 
 T = TypeVar('T')
 
