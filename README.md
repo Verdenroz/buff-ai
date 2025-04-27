@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BuffAI 📈
+> Your Personal Finance and Stock Market Assistant — built with Next.js, FastAPI, Redis, and Gemini AI (Google GenAI).
 
-## Getting Started
+🌐 Live Demo: https://buff-ai.vercel.app/
+---
 
-First, run the development server:
+## 🛠️ Project Overview
+
+BuffAI is an AI-driven financial web application that helps users:
+- Analyze stock fundamentals
+- Assess sentiment based on real-time news
+- Propose actionable trading strategies
+- Interact via natural conversation, in real time (streaming)
+
+The platform leverages:
+- **Next.js 15** frontend (React, Server Actions, Edge Streaming)
+- **FastAPI** backend (Python async APIs)
+- **Google Gemini API** for LLM responses
+- **Tavily Search** for financial web search
+- **Redis** for fast in-memory storage (Trump posts, TTS)
+- **Amazon S3** for hosting generated MP3s (Trump voice posts)
+- **ElevenLabs API** for text-to-speech
+- **Tailwind CSS** for beautiful UI design
+
+---
+
+## ✨ Features
+
+- Chat Interface to ask financial questions naturally
+- Real-Time Sentiment Analysis on stocks
+- Dynamic Trading Strategies powered by real-time data
+- TruthSocial Scraper to fetch and analyze Trump's posts
+- Financial Filtering of Trump's posts using LLMs
+- Audio TTS Generation of filtered posts
+- Redis Caching for fast access to posts
+- S3 Presigned URLs for secure streaming of MP3 files
+- Scalable microservices design (agents: Fundamentals, Sentiment, Trading)
+
+---
+
+## 📚 Tech Stack
+
+| Layer            | Technologies                                      |
+| ---------------- | ------------------------------------------------- |
+| Frontend (Web)   | Next.js 15, Tailwind CSS, ShadCN UI, ReactMarkdown |
+| Backend (API)    | FastAPI, Uvicorn, asyncio, Redis, S3, yFinance     |
+| LLM / AI         | Google Gemini (via google-genai), Tavily, ElevenLabs TTS |
+| Infrastructure   | Amazon S3, Redis Cloud, Vercel, Render             |
+| Dev Tools        | TypeScript, Python 3.11+, Pydantic, Selenium, dotenv |
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repo
+
+https://github.com/Verdenroz/buff-ai
+
+###  Install Frontend (Next.js)
+
+cd src/app
+npm install
+npm run dev
+
+###  Install Backend (FastAPI)
+
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+
+## 🧩 Main Components
+
+### 🔹 Supervisor Agent
+- Smart router that analyzes chat intent
+- Routes request to:
+  - FundamentalsAgent
+  - SentimentAgent
+  - TradingStrategyAgent
+
+### 🔹 Fundamentals Agent
+- Fetches stock quotes (price, PE ratio, etc)
+- Fetches technical indicators
+- Answers finance-specific user questions
+
+### 🔹 Sentiment Agent
+- Pulls live stock news
+- Classifies positive, neutral, or negative sentiment
+- Returns structured JSON
+
+### 🔹 Trading Strategy Agent
+- Analyzes stocks for trading opportunities
+- Incorporates quotes, technicals, news, and Trump's posts
+- Proposes buy/hold/sell strategies
+
+### 🔹 Trump Post Processing
+- Scrapes posts from TruthSocial using Selenium
+- Filters for finance-relevant content (LLM-based)
+- Converts text to speech (TTS) using ElevenLabs
+- Stores MP3s in S3, metadata in Redis
+
+---
+
+## 🛡️ API Endpoints
+
+| Method | URL                         | Purpose                          |
+| :----: | ---------------------------- | -------------------------------- |
+| GET    | `/price/{ticker}?period=1d`   | Fetch stock price data           |
+| GET    | `/posts/{author}`             | Fetch recent posts (e.g., Trump)  |
+| POST   | `/chat`                      | Chatbot non-streaming response   |
+| POST   | `/chat/stream`               | Chatbot streaming response       |
+| GET    | `/sentiment/{ticker}`         | Stock news sentiment analysis    |
+| GET    | `/tts?key=s3key`              | Fetch Trump post audio           |
+
+---
+
+## ⚙️ Environment Variables
+
+You must create a `.env` file at the project root with:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+# Google Gemini API Key
+GEMINI_API_KEY=your-gemini-api-key
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# Tavily Search API Key
+TAVILY_API_KEY=your-tavily-api-key
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# ElevenLabs TTS API Key
+ELEVENLABS_API_KEY=your-elevenlabs-api-key
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Redis
+REDIS_URL=redis://your-redis-url
 
-## Learn More
+# S3 Credentials
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 
-To learn more about Next.js, take a look at the following resources:
+🧪 Local Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Frontend:** Navigate to `src/app`
+- **Backend:** Navigate to `backend`
+- **Redis:** Run a local Redis instance or use Redis Cloud
+- **AWS S3:** Make sure you have an S3 bucket created
+- **Environment Variables:** Set up `.env` properly
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+📦 Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+You can deploy:
+- Frontend on **Vercel**
+- Backend on **Render**, **Railway**, or **Fly.io**
+- Redis on **Upstash** or **Redis Cloud**
+- S3 storage on **AWS**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Configure environment variables accordingly.
+
+---
+
+🧠 Future Improvements
+
+- ✅ Dockerize backend services
+- ✅ Add stock watchlists
+- ✅ Enhance Trump post TTS with multiple voices
+- ✅ Allow user-uploaded posts for sentiment analysis
+- ✅ Add user authentication (Auth.js)
+
+
