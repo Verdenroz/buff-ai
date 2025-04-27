@@ -5,4 +5,4 @@ from pydantic import BaseModel
 
 class ChatRequest(BaseModel):
     message: str
-    history: List[Dict[str, str]]
+    history: List[Dict[str, str]] = []

@@ -5,7 +5,9 @@ import requests
 import yfinance as yf
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.params import Path
+from starlette.responses import StreamingResponse
 
+from agents.supervisor_agent import SupervisorAgent
 from dependencies import RDS, S3
 from models.chatrequest import ChatRequest
 from models.historical import Period
@@ -104,6 +106,7 @@ async def get_fundamentals(ticker: str):
     }
     return fundamentals
 
+
 @app.get("/logo/{ticker}")
 async def get_logo(ticker: str):
     """
@@ -145,17 +148,24 @@ async def get_tts(
     # return presigned url
     return {"audio_file": audio_file}
 
-#route for chatbot
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     """
-    Process a chat request.
+    Nonstreaming endpoint: yields the Markdown response as a single response
     """
+    supervisor = SupervisorAgent()
+    response = await supervisor.handle(request)
+    return response
 
-    # Actual logic for chatbot would go here
 
-    #Just echo request back for now
-    return {
-        "message": "Chat request processed",
-        "data": request.model_dump()
-    }
+@app.post("/chat/stream")
+async def chat_stream(request: ChatRequest):
+    """
+    Streaming endpoint: yields the Markdown response as it’s generated chunk by chunk
+    """
+    supervisor = SupervisorAgent()
+    return StreamingResponse(
+        supervisor.handle_stream(request),
+        media_type="text/event-stream"
+    )
