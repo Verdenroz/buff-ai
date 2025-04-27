@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -20,7 +20,7 @@ export default function StockIndicatorsDisplay({ ticker }: { ticker: string }) {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  const fetchIndicators = async () => {
+  const fetchIndicators = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`https://finance-query.onrender.com/v1/indicators?symbol=${ticker}`)
@@ -42,7 +42,7 @@ export default function StockIndicatorsDisplay({ ticker }: { ticker: string }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [ticker])
 
   useEffect(() => {
     fetchIndicators()
@@ -52,7 +52,7 @@ export default function StockIndicatorsDisplay({ ticker }: { ticker: string }) {
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId)
-  }, [ticker])
+  }, [fetchIndicators, ticker])
 
   if (error) {
     return (
