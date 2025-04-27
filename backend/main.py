@@ -10,8 +10,6 @@ from dependencies import RDS, S3
 from models.historical import Period
 from rds import RedisHandler
 
-app = FastAPI()
-
 elevenlabs = os.getenv("ELEVENLABS_API_KEY")
 
 
@@ -25,6 +23,9 @@ async def lifespan(app: FastAPI):
     app.state.s3 = s3
 
     yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
@@ -111,7 +112,7 @@ async def get_logo(ticker: str):
 @app.get("/posts/{author}")
 async def get_posts(
         rds: RDS,
-        author: str = Path("trump"),
+        author: str = Path(),
 ):
     """
     Fetch posts for a given author.
