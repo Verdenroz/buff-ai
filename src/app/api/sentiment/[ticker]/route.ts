@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 export async function GET(_request: NextRequest, { params }: { params: { ticker: string } }) {
-  const { ticker } = await params
+  const ticker = (await params).ticker
 
   try {
     // Forward the request to the backend API

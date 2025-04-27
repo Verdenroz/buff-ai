@@ -4,7 +4,7 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: { author: string } }
 ) {
-  const { author } = await params
+  const author = (await params).author
 
   try {
     // Forward the request to the backend API

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest, { params }: { params: { ticker: string } }) {
-  const { ticker } = await params
+  const ticker = (await params).ticker
   const searchParams = request.nextUrl.searchParams
   const period = searchParams.get("period")
 
