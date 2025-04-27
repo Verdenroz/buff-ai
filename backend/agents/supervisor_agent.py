@@ -4,6 +4,7 @@ from typing import Dict, Literal, List, Optional, Any, AsyncGenerator
 from pydantic import BaseModel
 
 from agents.fundamentals_agent import FundamentalsAgent
+from agents.search_agent import SearchAgent
 from agents.sentiment_agent import SentimentAgent
 from agents.trading_strategy_agent import TradingStrategyAgent
 from models.chatrequest import ChatRequest
@@ -15,7 +16,7 @@ class ChatResponse(BaseModel):
 
 
 class RoutingDecision(BaseModel):
-    agents: List[Literal['fundamentals', 'sentiment', 'trading']]
+    agents: List[Literal['fundamentals', 'sentiment', 'trading', 'search']]
     ticker: Optional[str]
     question: Optional[str]
 
@@ -32,6 +33,7 @@ class SupervisorAgent:
         self.fundamentals = FundamentalsAgent(llm=self.llm)
         self.sentiment = SentimentAgent(llm=self.llm)
         self.trading = TradingStrategyAgent(llm=self.llm)
+        self.search = SearchAgent(llm=self.llm)
 
     async def handle(self, request: ChatRequest) -> ChatResponse:
         # decide which agents to run and extract ticker/question
@@ -40,6 +42,7 @@ class SupervisorAgent:
             "- fundamentals for core metrics and comparisons\n"
             "- sentiment for news sentiment analysis\n"
             "- trading for strategy recommendations\n"
+            "- search for recommending stocks to buy\n"
             "Given the following user message and chat history, identify which agents should handle it, "
             "and extract a ticker symbol if present, along with the core question. "
             "Respond in JSON with keys: agents (list), ticker (string or null), question (string or null)."
@@ -80,8 +83,13 @@ class SupervisorAgent:
                 tasks.append(
                     self.trading.invoke(ticker)
                 )
+            elif agent_key == 'search':
+                tasks.append(
+                    self.search.recommend()
+                )
 
         raw_outputs = await asyncio.gather(*tasks, return_exceptions=True)
+        print("raw outputs:", raw_outputs)
         for key, output in zip(decision.agents, raw_outputs):
             if isinstance(output, Exception):
                 results_map[key] = f"**{key}** error: {output}"
@@ -111,6 +119,7 @@ class SupervisorAgent:
             "- fundamentals for core metrics and comparisons\n"
             "- sentiment for news sentiment analysis\n"
             "- trading for strategy recommendations\n"
+            "- search for recommending stocks to buy\n"
             "Given the following user message and chat history, identify which agents should handle it, "
             "and extract a ticker symbol if present, along with the core question. "
             "Respond in JSON with keys: agents (list), ticker (string or null), question (string or null)."
@@ -225,3 +234,16 @@ class SupervisorAgent:
         # Stream response from LLM
         async for chunk in self.llm.stream(system=system_prompt, prompt=conversation):
             yield chunk
+
+if __name__ == "__main__":
+    # Example usage
+    llm = LLM()
+    supervisor = SupervisorAgent(llm=llm)
+    request = ChatRequest(
+        message="What is the best stock to buy?",
+        history=[
+        ],
+        ticker="AAPL"
+    )
+    response = asyncio.run(supervisor.handle(request))
+    print(response.response)
