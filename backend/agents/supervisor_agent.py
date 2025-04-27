@@ -44,11 +44,12 @@ class SupervisorAgent:
             "and extract a ticker symbol if present, along with the core question. "
             "Respond in JSON with keys: agents (list), ticker (string or null), question (string or null)."
         )
+        if request.ticker:
+            system_prompt += f"\nFocus your analysis on ticker: {request.ticker}"
         # Combine history and latest message
         full_conversation = "".join(
-            f"{turn['role']}: {turn['message']}\n" for turn in request.history
+            f"{turn['role']}: {turn['content']}\n" for turn in request.history
         ) + f"user: {request.message}"
-
         # Use structured generation for routing
         decision: RoutingDecision = self.llm.generate_structured(
             system=system_prompt,
@@ -61,6 +62,10 @@ class SupervisorAgent:
         results_map: Dict[str, str] = {}
         ticker = decision.ticker or ""
         question = decision.question or request.message
+
+        if not decision.agents:
+            response = await self.handle_chat(request, full_conversation)
+            return ChatResponse(response=response)
 
         for agent_key in decision.agents:
             if agent_key == 'fundamentals':
@@ -93,6 +98,7 @@ class SupervisorAgent:
         summary_prompt = (
                 f"User asked: {request.message}\n\n" + "\n\n".join(prompt_parts) +
                 "\n\nGenerate a final answer in Markdown that addresses the user's request, synthesizes relevant data, and is concise."
+                "DO NOT INCLUDE ANY EXTRA INFORMATION. INCLUDE ONLY RELEVANT RESPONSES TO USER MESSAGE."
         )
         final_md = self.llm.generate(system=summary_system, prompt=summary_prompt)
 
@@ -109,9 +115,11 @@ class SupervisorAgent:
             "and extract a ticker symbol if present, along with the core question. "
             "Respond in JSON with keys: agents (list), ticker (string or null), question (string or null)."
         )
+        if request.ticker:
+            system_prompt += f"\nFocus your analysis on ticker: {request.ticker}"
         # Combine history and latest message
         full_conversation = "".join(
-            f"{turn['role']}: {turn['message']}\n" for turn in request.history
+            f"{turn['role']}: {turn['content']}\n" for turn in request.history
         ) + f"user: {request.message}"
 
         # Use structured generation for routing
@@ -126,6 +134,11 @@ class SupervisorAgent:
         results_map: Dict[str, str] = {}
         ticker = decision.ticker or ""
         question = decision.question or request.message
+
+        if not decision.agents:
+            async for chunk in self.handle_chat_stream(request, full_conversation):
+                yield chunk
+            return
 
         for agent_key in decision.agents:
             if agent_key == 'fundamentals':
@@ -157,7 +170,58 @@ class SupervisorAgent:
         summary_prompt = (
                 f"User asked: {request.message}\n\n" + "\n\n".join(prompt_parts) +
                 "\n\nGenerate a final answer in Markdown that addresses the user's request, synthesizes relevant data, and is concise."
+                "DO NOT INCLUDE ANY EXTRA INFORMATION. INCLUDE ONLY RELEVANT RESPONSES TO USER MESSAGE."
         )
 
         async for chunk in self.llm.stream(system=summary_system, prompt=summary_prompt):
+            yield chunk
+
+    async def handle_chat(self, request: ChatRequest, conversation: str) -> str:
+        """
+        Handle general chat when no specialized agents are selected.
+        Simply passes the conversation to the LLM for a direct response.
+
+        Args:
+            request: The chat request containing message and history
+
+        Returns:
+            The LLM's direct response as a string
+        """
+        system_prompt = (
+            "You are Buff, a helpful AI assistant focused on stocks and financial markets. "
+            "Provide concise, informative responses to user questions. "
+            "When you don't know something specific, be honest about limitations. "
+            "Format your responses using Markdown for readability."
+        )
+
+        if request.ticker:
+            system_prompt += f"\nFocus your response on ticker: {request.ticker}"
+
+        # Get direct response from LLM
+        response = self.llm.generate(system=system_prompt, prompt=conversation)
+        return response
+
+    async def handle_chat_stream(self, request: ChatRequest, conversation: str) -> AsyncGenerator[str, None]:
+        """
+        Stream version of handle_chat that returns chunks as they're generated.
+        Simply passes the conversation to the LLM and streams the response.
+
+        Args:
+            request: The chat request containing message and history
+
+        Yields:
+            Chunks of the LLM's response as they become available
+        """
+        system_prompt = (
+            "You are Buff, a helpful AI assistant focused on stocks and financial markets. "
+            "Provide concise, informative responses to user questions. "
+            "When you don't know something specific, be honest about limitations. "
+            "Format your responses using Markdown for readability."
+        )
+
+        if request.ticker:
+            system_prompt += f"\nFocus your response on ticker: {request.ticker}"
+
+        # Stream response from LLM
+        async for chunk in self.llm.stream(system=system_prompt, prompt=conversation):
             yield chunk
