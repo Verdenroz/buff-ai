@@ -3,11 +3,12 @@ from contextlib import asynccontextmanager
 
 import requests
 import yfinance as yf
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
+from fastapi.params import Path
 
+from dependencies import RDS, S3
 from models.historical import Period
 from rds import RedisHandler
-from s3 import S3
 
 app = FastAPI()
 
@@ -111,10 +112,26 @@ async def get_logo(ticker: str):
         return {"error": "Failed to fetch logo"}
 
 
+@app.get("/posts/{author}")
+async def get_posts(
+        rds: RDS,
+        author: str = Path("trump"),
+):
+    """
+    Fetch posts for a given author.
+    """
+    posts = rds.get_recent_posts(author)
+    if not posts:
+        raise HTTPException(status_code=404)
+    return posts
+
+
 @app.get("/tts")
-async def get_tts(key: str = Query(...)):
+async def get_tts(
+        s3: S3,
+        key: str = Query(...),
+):
     # Get the audio file from s3
-    s3 = S3()
     audio_file = s3.get_presigned_url(key)
     if not audio_file:
         return {"error": "Audio file not found"}

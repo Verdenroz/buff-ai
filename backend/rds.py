@@ -63,9 +63,9 @@ class RedisHandler:
         key = f"trump:{post.date}"
         return self.set(key, post.model_dump_json(), expiry=30 * 24 * 60 * 60)  # 30 days
 
-    def get_recent_trump_posts(self) -> List[Post]:
+    def get_recent_posts(self, author: str = "trump") -> List[Post]:
         """Get the most recent Trump posts from Redis"""
-        pattern = "trump:*"
+        pattern = f"{author}:*"
         keys = self.redis.keys(pattern)
 
         posts = []
