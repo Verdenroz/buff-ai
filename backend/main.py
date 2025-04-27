@@ -83,19 +83,15 @@ async def get_news(ticker: str):
 @app.get("/fundamentals/{ticker}")
 async def get_fundamentals(ticker: str):
     """
-    Fetch company fundamentals for a given ticker.
+    Fetch company fundamentals for a given ticker. Returns company name, business summary and logo
     """
     stock = yf.Ticker(ticker)
     fundamentals = {
-        "info": stock.info,
-        "sustainability": stock.sustainability,
-        "calendar": stock.calendar,
-        "actions": stock.actions,
-        "dividends": stock.dividends,
-        "splits": stock.splits,
+        "name": stock.info.get("longName", "N/A"),
+        "summary": stock.info.get("longBusinessSummary", "N/A"),
+        "logo": await get_logo(ticker)
     }
     return fundamentals
-
 
 @app.get("/logo/{ticker}")
 async def get_logo(ticker: str):
