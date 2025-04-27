@@ -5,7 +5,7 @@ from tavily_search import TavilySearch
 from utils.llm import LLM
 import requests
 
-class GoodStocksAgent(Agent):
+class SearchAgent(Agent):
     """
     Agent specialized in identifying stocks that would be good to buy
     """
@@ -119,7 +119,7 @@ class GoodStocksAgent(Agent):
         return await super().invoke(prompt=prompt, system=system_instruction)
 
 if __name__ == "__main__":
-    agent = GoodStocksAgent()
+    agent = SearchAgent()
     #recommendations = asyncio.run(agent.recommend(symbols=["AAPL", "MSFT", "GOOGL"]))
     recommendations = asyncio.run(agent.recommend())
 
