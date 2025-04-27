@@ -76,5 +76,4 @@ class RedisHandler:
                 posts.append(post)
 
         # Sort posts by timestamp (descending)
-        print(posts)
         return sorted(posts, key=lambda x: x.date, reverse=True)

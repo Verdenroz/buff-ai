@@ -164,6 +164,7 @@ class SupervisorAgent:
                 )
 
         raw_outputs = await asyncio.gather(*tasks, return_exceptions=True)
+        print("raw outputs:", raw_outputs)
         for key, output in zip(decision.agents, raw_outputs):
             if isinstance(output, Exception):
                 results_map[key] = f"**{key}** error: {output}"
@@ -240,10 +241,9 @@ if __name__ == "__main__":
     llm = LLM()
     supervisor = SupervisorAgent(llm=llm)
     request = ChatRequest(
-        message="What is the best stock to buy?",
-        history=[
-        ],
-        ticker="AAPL"
+        message="What is the current price?",
+        history=[],
+        ticker="NVDA"
     )
     response = asyncio.run(supervisor.handle(request))
     print(response.response)

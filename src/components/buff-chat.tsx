@@ -45,7 +45,7 @@ export default function BuffChat({ ticker }: { ticker: string }) {
       const chatHistory = messages.slice(1).concat(userMessage);
       const payload = {
         message: userMessage.content,
-        ticker,
+        ticker: ticker,
         history: chatHistory.map((msg) => ({
           role: msg.role,
           content: msg.content,
