@@ -1,6 +1,7 @@
 import os
 from typing import TypeVar, Type
 
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from pydantic import BaseModel
@@ -16,6 +17,7 @@ class LLM:
         Args:
             model_name: The Gemini model to use
         """
+        load_dotenv()
         self.model_name = model_name
         self.client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
         self.generation_config = {
