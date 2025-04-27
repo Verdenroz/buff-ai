@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -30,25 +30,6 @@ export default function BuffChat({ ticker }: { ticker: string }) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState("");
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const didMountRef = useRef(false);
-
-  // only scroll when a new message/stream chunk arrives _after_ mount
-  useEffect(() => {
-    if (didMountRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      didMountRef.current = true;
-    }
-  }, [messages, currentResponse]);
-
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Focus input on load
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,7 +203,7 @@ export default function BuffChat({ ticker }: { ticker: string }) {
               </div>
             )}
 
-            <div ref={messagesEndRef} />
+            <div />
           </div>
         </ScrollArea>
       </CardContent>
@@ -230,7 +211,6 @@ export default function BuffChat({ ticker }: { ticker: string }) {
       <CardFooter className="border-t p-4">
         <form onSubmit={handleSubmit} className="flex w-full gap-2">
           <Input
-            ref={inputRef}
             placeholder="Ask Buff about this stock..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
