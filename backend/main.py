@@ -45,6 +45,7 @@ async def root():
 async def get_stock_data(ticker: str, period: Period):
     """
     Fetch stock data for a given ticker, period, and interval.
+    Maps data by datetime timestamps in milliseconds (integer format).
     """
     intervals = {
         period.ONE_DAY: "5m",
@@ -67,7 +68,15 @@ async def get_stock_data(ticker: str, period: Period):
 
     stock = yf.Ticker(ticker)
     data = stock.history(period=period_string, interval=interval)
-    return data.to_dict(orient="records")
+
+    # Convert the DataFrame index to Unix timestamps (milliseconds)
+    data_dict = {}
+    for idx, row in data.iterrows():
+        # Convert timestamp to milliseconds integer
+        timestamp = int(idx.timestamp() * 1000)
+        data_dict[timestamp] = row.to_dict()
+
+    return data_dict
 
 
 # Fetch news articles for a given ticker
