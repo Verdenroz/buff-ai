@@ -79,7 +79,7 @@ async def get_news(ticker: str):
     return news
 
 
-# Get company funamentals
+# Get company fundamentals
 @app.get("/fundamentals/{ticker}")
 async def get_fundamentals(ticker: str):
     """
