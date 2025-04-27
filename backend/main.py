@@ -7,6 +7,7 @@ from fastapi import FastAPI, Query, HTTPException
 from fastapi.params import Path
 
 from dependencies import RDS, S3
+from models.chatrequest import ChatRequest
 from models.historical import Period
 from rds import RedisHandler
 
@@ -134,3 +135,18 @@ async def get_tts(
         return {"error": "Audio file not found"}
     # return presigned url
     return {"audio_file": audio_file}
+
+#route for chatbot
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    """
+    Process a chat request.
+    """
+
+    # Actual logic for chatbot would go here
+
+    #Just echo request back for now
+    return {
+        "message": "Chat request processed",
+        "data": request.model_dump()
+    }
