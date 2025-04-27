@@ -53,7 +53,7 @@ class Agent:
         """
         contents = []
         if system:
-            contents.append(types.Content(role="system", parts=[types.Part(text=system)]))
+            contents.append(types.Content(role="model", parts=[types.Part(text=system)]))
         contents.append(types.Content(role="user", parts=[types.Part(text=prompt)]))
 
         response = self.client.models.generate_content(
