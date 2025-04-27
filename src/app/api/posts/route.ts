@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { author: string } }
-) {
-  const author = (await params).author
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const author = searchParams.get('author')
+  
+  if (!author) {
+    return NextResponse.json(
+      { error: "Author parameter is required" },
+      { status: 400 }
+    )
+  }
 
   try {
     // Forward the request to the backend API

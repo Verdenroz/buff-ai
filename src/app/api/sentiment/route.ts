@@ -1,13 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-export async function GET(request: NextRequest, { params }: { params: { ticker: string } }) {
-  const ticker = (await params).ticker
+export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
-  const period = searchParams.get("period")
+  const ticker = searchParams.get("ticker")
+  
+  if (!ticker) {
+    return NextResponse.json(
+      { error: "Ticker parameter is required" },
+      { status: 400 }
+    )
+  }
 
   try {
     // Forward the request to the backend API
-    const response = await fetch(`${process.env.API_URL}/price/${ticker}?period=${period}`, {
+    const response = await fetch(`${process.env.API_URL}/sentiment/${ticker}`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -21,7 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: { ticker: 
     const data = await response.json()
     return NextResponse.json(data)
   } catch (error) {
-    console.error("Error fetching stock data:", error)
-    return NextResponse.json({ error: "Failed to fetch stock data" }, { status: 500 })
+    console.error("Error fetching sentiment data:", error)
+    return NextResponse.json({ error: "Failed to fetch sentiment data" }, { status: 500 })
   }
 }

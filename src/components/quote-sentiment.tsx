@@ -32,7 +32,7 @@ export default function QuoteSentiment({ ticker }: { ticker: string }) {
   const fetchSentimentData = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/sentiment/${ticker}`)
+      const response = await fetch(`/api/sentiment?ticker=${encodeURIComponent(ticker)}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch sentiment data: ${response.status}`)
