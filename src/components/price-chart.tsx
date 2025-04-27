@@ -79,7 +79,7 @@ export default function PriceChart({ ticker }: { ticker: string }) {
   const fetchStockData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/price/${ticker}?period=${period}`);
+      const response = await fetch(`/api/price?ticker=${encodeURIComponent(ticker)}&period=${period}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch stock data: ${response.status}`);
       }
@@ -118,7 +118,7 @@ export default function PriceChart({ ticker }: { ticker: string }) {
   // Function to fetch posts/tweets
   const fetchPosts = async () => {
     try {
-      const response = await fetch(`/api/posts/trump`);
+      const response = await fetch(`/api/posts?author=trump`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch posts: ${response.status}`);
