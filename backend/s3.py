@@ -1,3 +1,5 @@
+import os
+
 import boto3
 from botocore.config import Config
 from dotenv import load_dotenv
@@ -12,6 +14,8 @@ class S3:
         self.client = boto3.client(
             's3',
             region_name='us-east-2',
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             endpoint_url='https://s3.us-east-2.amazonaws.com',
             config=Config(signature_version='s3v4')
         )
