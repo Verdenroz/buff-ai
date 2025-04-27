@@ -78,36 +78,34 @@ class SearchAgent(Agent):
             automatic_function_calling=automatic_function_calling,
         )
 
-    async def recommend(self, symbols: Optional[List[str]] = None, system: Optional[str] = None) -> str:
+    async def recommend(self, system: Optional[str] = None) -> str:
         """
         Recommend good stocks to buy based on analysis.
         Args:
-            symbols: List of stock symbols to analyze. If None, fetch trending stocks.
             system: Optional system-level instruction.
 
         Returns:
             Recommendations with reasoning.
         """
-
-        if not symbols:
-            # Fetch trending or popular stocks using the get_search method
-            search_results = self.tools[0]("What are some good stocks to buy?")
-            symbols = []
-
+        # Fetch trending or popular stocks using the get_search method
+        search_results = self.tools[0]("What are some good stocks to buy?")
+        symbols = []
         for result in search_results.get("results", []):
             # Extract stock symbols from the content field
             if "content" in result:
-                symbols.extend([word.strip() for word in result["content"].split() if word.isupper() and len(word) <= 5])
+                symbols.extend(
+                    [word.strip() for word in result["content"].split() if word.isupper() and len(word) <= 5]
+                )
 
         if not symbols:
-            return "No stocks available for recommendation."
+            return "No trending stocks were found. Please try again later."
 
         prompt = (
             f"Analyze the following stock symbols: {', '.join(symbols)}. "
             "For each stock, use the tools get_quotes, get_technicals, and get_news to gather data. "
-            "Based on the data, output only the stocks that would be good to buy. Don't print out information about stocks with bad data"
-            "Provide clear reasoning for each recommendation, including key metrics and sentiment analysis."
-            "If a stock does not have sufficient data, do not include it in the recommendations."
+            "Based on the data, recommend stocks that are good to buy. "
+            "Provide clear reasoning for each recommendation, including key metrics and sentiment analysis. "
+            "Focus on actionable insights and avoid disclaimers or generic responses."
         )
 
         system_instruction = system or (
