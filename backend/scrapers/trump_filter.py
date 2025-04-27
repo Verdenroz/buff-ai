@@ -19,7 +19,7 @@ class ApiRateLimitError(Exception):
 
 
 class TrumpPostFilter:
-    def __init__(self, input_path: str = "output/trump_posts.json", output_path: str = "output/filtered_posts.json"):
+    def __init__(self, input_path: str = "output/filtered_posts.json", output_path: str = "output/filtered_further_posts.json"):
         """
         Filter Trump posts for financial/economic content
 
@@ -61,20 +61,33 @@ class TrumpPostFilter:
         Check if post is related to finance, economics, or stocks
         """
         system_prompt = """
-        You are an expert financial content analyst. Your task is to determine if the provided text
-        relates to finance, economics, stocks, markets, inflation, trade, interest rates, unemployment,
-        economic policy, taxes, or other economic/financial topics.
+        You are an expert financial analyst specializing in stock markets and international trade. 
+        Your task is to determine if the provided text specifically relates to:
+        1. Stock markets (indexes, individual stocks, market trends, investor sentiment)
+        2. Tariffs and trade policies (import/export taxes, trade agreements, sanctions)
+        3. Economic policies that directly affect stock markets or tariffs
+        4. Market reactions to economic policies (e.g. buying/selling stocks based on tariffs)
+        5. Comments about taking action on financial institutions or stock exchanges
+
+        Only mark content as relevant if it directly discusses these specific topics.
 
         Respond with ONLY a clean, properly formatted JSON object: {"is_relevant": true/false}
         No additional text, comments, or whitespace before or after the JSON.
         """
 
         user_prompt = f"""
-        Here is a social media post. Determine if it's related to finance, economics, stocks, or markets:
+        Here is a social media post. Determine if it's specifically related to stock markets or tariffs:
 
         "{post_content}"
 
-        Return ONLY {{"is_relevant": true}} if related to finance/economics, or {{"is_relevant": false}} if not.
+        Return ONLY {{"is_relevant": true}} if related to stock markets or tariffs, or {{"is_relevant": false}} if not.
+        Examples of relevant content:
+        - Discussion of stock prices, market performance, or specific companies' stock
+        - Discussion of tariffs, import/export taxes, or trade agreements
+        - References to market reactions to economic policies
+        - Comments about stock market indices like Dow Jones, S&P 500, or NASDAQ
+
+        Return false for general economic topics that don't specifically mention stock markets or tariffs.
         """
         response = self.llm.generate_structured(
             system=system_prompt,
