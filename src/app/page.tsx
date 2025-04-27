@@ -15,7 +15,6 @@ export default function Home() {
         <main>
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1">
-              //StockChart
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <CompanyInfo />
                 <SentimentAnalysis />
