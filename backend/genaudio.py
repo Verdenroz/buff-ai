@@ -20,25 +20,8 @@ if __name__ == "__main__":
     s3_client = S3()
     redis_handler = RedisHandler()
 
-    # s3 = S3()
-    # with open("videoplayback.mp3", "rb") as f:
-    #     file_content = f.read()
-    # post = Post(author="John Doe", date=2, content="Sample content")
-    # key = s3.upload_file(file_content, post)
-    # url = s3.get_presigned_url(key)
-    # print(f"Presigned URL: {url}")
-
-
-    #Save eleven labs mp3 to file locally
-    generated_audio = elevenlabs_client.generate(
-        text="This is a longer sample text that should generate properly.",
-        voice="Adam",
-        model="eleven_multilingual_v2"
-    )
-    save(generated_audio, "output.mp3")
-
     # Load filtered posts
-    with open("filtered_posts.json", "r") as file:
+    with open("filtered_further_posts.json", "r") as file:
         filtered_posts = json.load(file)
 
     # Process each post
@@ -50,7 +33,7 @@ if __name__ == "__main__":
             generated_audio = elevenlabs_client.generate(
                 text=post.content,
                 voice="Adam",
-                model="eleven_multilingual_v2"
+                model="eleven_flash_v2_5"
             )
         except Exception as e:
             print(f"Error generating audio for post {post.date}: {e}")
@@ -63,7 +46,6 @@ if __name__ == "__main__":
         #Upload MP3 to S3
         try:
             s3_key = s3_client.upload_file(file_content, post)
-            url = s3_client.get_presigned_url(s3_key)
         except Exception as e:
             print(f"Error uploading audio for post {post.date}: {e}")
             continue
