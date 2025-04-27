@@ -1,16 +1,18 @@
+import json
 import os
 from contextlib import asynccontextmanager
 
-import requests
 import yfinance as yf
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.params import Path
 from starlette.responses import StreamingResponse
 
+from agents.sentiment_agent import SentimentAgent
 from agents.supervisor_agent import SupervisorAgent
 from dependencies import RDS, S3
 from models.chatrequest import ChatRequest
 from models.historical import Period
+from models.sentiment import SentimentResponse
 from rds import RedisHandler
 
 elevenlabs = os.getenv("ELEVENLABS_API_KEY")
@@ -43,7 +45,7 @@ async def root():
 """
 
 
-@app.get("/stock/{ticker}")
+@app.get("/price/{ticker}")
 async def get_stock_data(ticker: str, period: Period):
     """
     Fetch stock data for a given ticker, period, and interval.
@@ -74,52 +76,11 @@ async def get_stock_data(ticker: str, period: Period):
     # Convert the DataFrame index to Unix timestamps (milliseconds)
     data_dict = {}
     for idx, row in data.iterrows():
-        # Convert timestamp to milliseconds integer
-        timestamp = int(idx.timestamp() * 1000)
+        # Convert timestamp to seconds integer
+        timestamp = int(idx.timestamp())
         data_dict[timestamp] = row.to_dict()
 
     return data_dict
-
-
-# Fetch news articles for a given ticker
-@app.get("/news/{ticker}")
-async def get_news(ticker: str):
-    """
-    Fetch news articles for a given ticker.
-    """
-    stock = yf.Ticker(ticker)
-    news = stock.news
-    return news
-
-
-# Get company fundamentals
-@app.get("/fundamentals/{ticker}")
-async def get_fundamentals(ticker: str):
-    """
-    Fetch company fundamentals for a given ticker. Returns company name, business summary and logo
-    """
-    stock = yf.Ticker(ticker)
-    fundamentals = {
-        "name": stock.info.get("longName", "N/A"),
-        "summary": stock.info.get("longBusinessSummary", "N/A"),
-        "logo": await get_logo(ticker)
-    }
-    return fundamentals
-
-
-@app.get("/logo/{ticker}")
-async def get_logo(ticker: str):
-    """
-    Fetch logo for a given company.
-    """
-    public_token = "pk_PB5o5CpXRiSO0JcU6FzItw"
-    url = f"https://img.logo.dev/ticker/{ticker}?token={public_token}"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        return {"logo_url": url}
-    else:
-        return {"error": "Failed to fetch logo"}
 
 
 @app.get("/posts/{author}")
@@ -169,3 +130,26 @@ async def chat_stream(request: ChatRequest):
         supervisor.handle_stream(request),
         media_type="text/event-stream"
     )
+
+
+@app.get("/sentiment/{ticker}", response_model=SentimentResponse)
+async def get_sentiment(ticker: str):
+    """
+    Fetch sentiment for a given ticker.
+    """
+    sentiment_agent = SentimentAgent()
+    result = await sentiment_agent.invoke(ticker=ticker)
+
+    # Need to extract and parse the JSON
+    if isinstance(result, str):
+        # Remove markdown code block if present
+        result = result.strip()
+        if result.startswith("```json"):
+            result = result[7:].strip()
+        if result.endswith("```"):
+            result = result[:-3].strip()
+
+        # Parse the JSON string into a dictionary
+        result = json.loads(result)
+
+    return SentimentResponse.model_validate(result)
