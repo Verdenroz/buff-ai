@@ -13,8 +13,7 @@ import os
 if __name__ == "__main__":
 
     load_dotenv(dotenv_path=".env")
-    elevenlabs = os.getenv("ELEVENLABS_API_KEY")
-    print(elevenlabs)
+    elevenlabs = os.getenv("ELEVENLABS_API_KEY")#elevenlabs api key
 
     elevenlabs_client = ElevenLabs(api_key=elevenlabs)
     s3_client = S3()
