@@ -62,8 +62,8 @@ export default function MarketMovers() {
 
     fetchMarketMovers();
 
-    // Optional: Set up polling to refresh data periodically
-    const intervalId = setInterval(fetchMarketMovers, 300000); // Refresh every 5 minutes
+  const FIFTEEN_MINUTES = 15 * 60 * 1000;
+  const intervalId = setInterval(fetchMarketMovers, FIFTEEN_MINUTES);
 
     return () => clearInterval(intervalId); // Clean up interval on unmount
   }, []);

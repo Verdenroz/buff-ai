@@ -23,7 +23,7 @@ async function getMarketIndices() {
     const response = await fetch(
       "https://finance-query.onrender.com/v1/indices?region=US",
       {
-        next: { revalidate: 300 },
+        next: { revalidate: 900  },
       }
     );
     if (!response.ok) {
