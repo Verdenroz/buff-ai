@@ -12,7 +12,7 @@ type NewsItem = {
 
 async function getFinanceNews() {
   try {
-    const response = await fetch("https://finance-query.onrender.com/v1/news", { next: { revalidate: 600 } })
+    const response = await fetch("https://finance-query.onrender.com/v1/news", { next: { revalidate: 900 } })
     if (!response.ok) {
       throw new Error("Failed to fetch news")
     }
